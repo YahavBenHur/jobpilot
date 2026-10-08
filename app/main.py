@@ -4,6 +4,9 @@ from app.analyzer import analyze_match
 from app.config import APP_ENV
 from app.cv_reader import extract_text_from_pdf
 from app.schemas import MatchResult
+from typing import Literal
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
 app = FastAPI(title="JobPilot")
 
@@ -14,7 +17,11 @@ def health():
 
 
 @app.post("/analyze", response_model=MatchResult)
-def analyze(cv: UploadFile = File(...), job_text: str = Form(...)):
+def analyze(
+    cv: UploadFile = File(...),
+    job_text: str = Form(...),
+    language: Literal["he", "en"] = Form("he"),
+):
     if cv.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="CV must be a PDF file")
 
@@ -22,4 +29,4 @@ def analyze(cv: UploadFile = File(...), job_text: str = Form(...)):
     if not cv_text:
         raise HTTPException(status_code=400, detail="Could not read text from the PDF")
 
-    return analyze_match(cv_text, job_text)
+    return analyze_match(cv_text, job_text, language)
