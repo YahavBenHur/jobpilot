@@ -30,3 +30,4 @@ class AgentRequest(BaseModel):
 class AgentResponse(BaseModel):
     answer: str
     steps: list[str]
+    conversation_id: str

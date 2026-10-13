@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -47,3 +48,26 @@ def list_applications(status: str | None = None) -> list[dict]:
     if status:
         applications = [a for a in applications if a["status"] == status]
     return applications
+
+CONVERSATIONS_DIR = DATA_DIR / "conversations"
+
+
+def is_valid_conversation_id(conversation_id: str) -> bool:
+    try:
+        uuid.UUID(conversation_id)
+        return True
+    except ValueError:
+        return False
+
+
+def load_conversation(conversation_id: str) -> list[dict]:
+    path = CONVERSATIONS_DIR / f"{conversation_id}.json"
+    if not path.exists():
+        return []
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def save_conversation(conversation_id: str, messages: list[dict]) -> None:
+    CONVERSATIONS_DIR.mkdir(parents=True, exist_ok=True)
+    path = CONVERSATIONS_DIR / f"{conversation_id}.json"
+    path.write_text(json.dumps(messages, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -50,6 +50,12 @@ def upload_cv(cv: UploadFile = File(...)):
 def agent(
     message: str = Form(...),
     language: Literal["he", "en"] = Form("he"),
+    conversation_id: str | None = Form(None),
 ):
-    answer, steps = run_agent(message, language)
-    return AgentResponse(answer=answer, steps=steps)
+    if not conversation_id:
+        conversation_id = None
+    elif not storage.is_valid_conversation_id(conversation_id):
+        raise HTTPException(status_code=400, detail="Invalid conversation_id")
+
+    answer, steps, conversation_id = run_agent(message, language, conversation_id)
+    return AgentResponse(answer=answer, steps=steps, conversation_id=conversation_id)
