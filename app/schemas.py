@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Literal
 
 
 class MatchResult(BaseModel):
@@ -20,3 +21,12 @@ class MatchResult(BaseModel):
     suggestions: list[str] = Field(
         description="Up to 5 concrete suggestions for presenting the candidate's REAL experience better. One sentence each."
     )
+
+class AgentRequest(BaseModel):
+    message: str
+    language: Literal["he", "en"] = "he"
+
+
+class AgentResponse(BaseModel):
+    answer: str
+    steps: list[str]
