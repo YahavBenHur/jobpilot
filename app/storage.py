@@ -6,7 +6,10 @@ from pathlib import Path
 DATA_DIR = Path("data")
 CV_FILE = DATA_DIR / "cv.txt"
 APPLICATIONS_FILE = DATA_DIR / "applications.json"
+CONVERSATIONS_DIR = DATA_DIR / "conversations"
 
+
+# ---------- CV ----------
 
 def save_cv(text: str) -> None:
     DATA_DIR.mkdir(exist_ok=True)
@@ -19,10 +22,19 @@ def load_cv() -> str | None:
     return CV_FILE.read_text(encoding="utf-8")
 
 
+# ---------- Applications ----------
+
 def _load_applications() -> list[dict]:
     if not APPLICATIONS_FILE.exists():
         return []
     return json.loads(APPLICATIONS_FILE.read_text(encoding="utf-8"))
+
+
+def _save_applications(applications: list[dict]) -> None:
+    DATA_DIR.mkdir(exist_ok=True)
+    APPLICATIONS_FILE.write_text(
+        json.dumps(applications, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
 
 def save_application(company: str, title: str, score: int | None, status: str) -> dict:
@@ -36,10 +48,7 @@ def save_application(company: str, title: str, score: int | None, status: str) -
         "created_at": datetime.now().isoformat(timespec="seconds"),
     }
     applications.append(application)
-    DATA_DIR.mkdir(exist_ok=True)
-    APPLICATIONS_FILE.write_text(
-        json.dumps(applications, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    _save_applications(applications)
     return application
 
 
@@ -49,8 +58,19 @@ def list_applications(status: str | None = None) -> list[dict]:
         applications = [a for a in applications if a["status"] == status]
     return applications
 
-CONVERSATIONS_DIR = DATA_DIR / "conversations"
 
+def update_application_status(application_id: int, status: str) -> dict:
+    applications = _load_applications()
+    for application in applications:
+        if application["id"] == application_id:
+            application["status"] = status
+            application["updated_at"] = datetime.now().isoformat(timespec="seconds")
+            _save_applications(applications)
+            return application
+    raise ValueError(f"No application found with id {application_id}")
+
+
+# ---------- Conversations ----------
 
 def is_valid_conversation_id(conversation_id: str) -> bool:
     try:

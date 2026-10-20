@@ -32,6 +32,18 @@ def block_to_dict(block) -> dict:
         return {"type": "redacted_thinking", "data": block.data}
     raise ValueError(f"Unsupported block type: {block.type}")
 
+def strip_thinking(messages: list[dict]) -> list[dict]:
+    cleaned = []
+    for message in messages:
+        if message["role"] == "assistant" and isinstance(message["content"], list):
+            content = [
+                block for block in message["content"]
+                if block["type"] not in ("thinking", "redacted_thinking")
+            ]
+            cleaned.append({"role": "assistant", "content": content})
+        else:
+            cleaned.append(message)
+    return cleaned
 
 def run_agent(
     message: str, language: str = "he", conversation_id: str | None = None
@@ -40,7 +52,7 @@ def run_agent(
         conversation_id = str(uuid.uuid4())
         messages = []
     else:
-        messages = storage.load_conversation(conversation_id)
+        messages = strip_thinking(storage.load_conversation(conversation_id))
 
     messages.append({"role": "user", "content": message})
     steps: list[str] = []

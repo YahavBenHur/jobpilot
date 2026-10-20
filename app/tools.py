@@ -65,6 +65,30 @@ TOOLS = [
             "required": [],
         },
     },
+    {
+        "name": "update_application_status",
+        "description": (
+            "Updates the status of an existing saved application. Use it when the user says "
+            "they applied, got an interview, were rejected or got an offer for a job they saved. "
+            "It needs the application id: if you do not know it, call list_applications first "
+            "and find the matching application by company and title."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "type": "integer",
+                    "description": "The id of the application, from list_applications.",
+                },
+                "status": {
+                    "type": "string",
+                    "enum": STATUSES,
+                    "description": "The new status.",
+                },
+            },
+            "required": ["application_id", "status"],
+        },
+    },
 ]
 
 
@@ -88,5 +112,12 @@ def run_tool(name: str, tool_input: dict, language: str) -> str:
     if name == "list_applications":
         applications = storage.list_applications(tool_input.get("status"))
         return json.dumps(applications, ensure_ascii=False)
+
+    if name == "update_application_status":
+        updated = storage.update_application_status(
+            application_id=tool_input["application_id"],
+            status=tool_input["status"],
+        )
+        return json.dumps(updated, ensure_ascii=False)
 
     raise ValueError(f"Unknown tool: {name}")
